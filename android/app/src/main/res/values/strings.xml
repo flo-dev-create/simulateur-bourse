@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Simulateur Bourse</string>
+    <string name="title_activity_main">Simulateur Bourse</string>
+    <string name="package_name">com.flodev.simulateurbourse</string>
+    <string name="custom_url_scheme">com.flodev.simulateurbourse</string>
+</resources>
