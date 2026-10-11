@@ -21,13 +21,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Force Install all dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install dependencies
+        run: npm install
 
-      - name: Build React and Package Electron
-        run: |
-          npx vite build
-          npx electron-builder --win nsis
+      - name: Build and Package Electron
+        run: npm run electron:dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
