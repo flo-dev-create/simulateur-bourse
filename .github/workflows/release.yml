@@ -22,7 +22,7 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --include=dev
+        run: npm ci
 
       - name: Build React and Package Electron
         run: npm run electron:dist
