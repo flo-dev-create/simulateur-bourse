@@ -1,4 +1,4 @@
-name: Build & Release Windows
+name: Build & Release Windows & Android
 
 on:
   push:
@@ -9,9 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build-windows:
     runs-on: windows-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,17 +20,81 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
 
-      - name: Build and Package Electron
+      - name: Compiler Electron (.exe)
         run: npm run electron:dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Release
+      - name: Sauvegarder artefact Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          path: dist-electron/*.exe
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Build web et sync Capacitor
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Droits d'exécution Gradle
+        run: chmod +x android/gradlew
+
+      - name: Compiler APK Android
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Renommer le binaire
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Simulateur-Bourse.apk
+
+      - name: Sauvegarder artefact Android
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifact
+          path: Simulateur-Bourse.apk
+
+  publish-release:
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Télécharger artefact Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifact
+          path: release-assets
+
+      - name: Télécharger artefact Android
+        uses: actions/download-artifact@v4
+        with:
+          name: android-artifact
+          path: release-assets
+
+      - name: Publier sur GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist-electron/*.exe
+          files: release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
